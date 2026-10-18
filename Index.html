@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SETLAND - Belajar Himpunan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header class="navbar">
+    <div class="brand"><i class="fa-solid fa-shapes"></i> SETLAND</div>
+    <div class="nav-right" id="navRight" style="display:none">
+      <span id="userNameDisplay" class="user-name" data-testid="current-user-name"></span>
+      <div class="notif-wrapper hidden" id="notifWrapper">
+        <button class="icon-btn" onclick="toggleNotifications()" aria-label="Pengumuman" data-testid="notif-button">
+          <i class="fa-solid fa-bell"></i><span class="bell-dot" id="bellDot"></span>
+        </button>
+        <div class="notif-dropdown" id="notifDropdown">
+          <div class="notif-head">
+            <b>Pengumuman</b>
+            <button class="link-btn" onclick="clearNotifDot(event)">Tandai dibaca</button>
+          </div>
+          <div id="notifList"></div>
+        </div>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="logout()" data-testid="logout-button"><i class="fa-solid fa-right-from-bracket"></i> Keluar</button>
+    </div>
+  </header>
+
+  <!-- LOGIN / DAFTAR -->
+  <div class="auth-overlay" id="authOverlay">
+    <div class="auth-card">
+      <div class="auth-logo"><i class="fa-solid fa-shapes"></i></div>
+      <h1>SETLAND</h1>
+      <p class="auth-sub">Belajar Himpunan untuk SMP</p>
+      <div class="role-tabs">
+        <button class="role-btn active" id="roleBtnSiswa" onclick="selectRole('siswa')" data-testid="login-role-siswa">Siswa</button>
+        <button class="role-btn" id="roleBtnGuru" onclick="selectRole('guru')" data-testid="login-role-guru">Guru</button>
+        <button class="role-btn" id="roleBtnAdmin" onclick="selectRole('admin')" data-testid="login-role-admin">Admin</button>
+      </div>
+
+      <form id="loginForm" onsubmit="handleLogin(event)">
+        <div class="form-group"><label for="loginUser">Email atau nama lengkap</label>
+          <input type="text" id="loginUser" class="form-control" placeholder="Nama lengkap atau email" autocomplete="username" required data-testid="login-user"></div>
+        <div class="form-group"><label for="loginPassword">Kata sandi</label>
+          <input type="password" id="loginPassword" class="form-control" autocomplete="current-password" required data-testid="login-password"></div>
+        <div class="auth-error hidden" id="loginError" data-testid="login-error"></div>
+        <button type="submit" class="btn btn-primary btn-block" data-testid="login-submit">Masuk</button>
+        <p class="auth-help" id="regHelpText">Belum punya akun? <button type="button" class="link-btn" onclick="toggleAuthMode('register')" data-testid="goto-register">Daftar sebagai siswa</button></p>
+      </form>
+
+      <form id="registerForm" class="hidden" onsubmit="handleRegister(event)">
+        <p class="auth-note"><i class="fa-solid fa-circle-info"></i> Akun siswa baru harus <b>disetujui admin</b> sebelum bisa digunakan.</p>
+        <div class="form-group"><label for="regName">Nama lengkap</label>
+          <input type="text" id="regName" class="form-control" placeholder="mis. Zafran Ahmad (bukan email)" autocomplete="name" required data-testid="register-name"></div>
+        <div class="form-row">
+          <div class="form-group"><label for="regDob">Tanggal lahir</label>
+            <input type="date" id="regDob" class="form-control" required data-testid="register-dob"></div>
+          <div class="form-group"><label for="regGender">Jenis kelamin</label>
+            <select id="regGender" class="form-control" required data-testid="register-gender">
+              <option value="">Pilih</option><option value="Laki-laki">Laki-laki</option><option value="Perempuan">Perempuan</option>
+            </select></div>
+        </div>
+        <div class="form-group"><label for="regEmail">Email</label>
+          <input type="email" id="regEmail" class="form-control" required data-testid="register-email"></div>
+        <div class="form-group"><label for="regPassword">Kata sandi</label>
+          <input type="password" id="regPassword" class="form-control" minlength="6" required data-testid="register-password"></div>
+        <div class="form-group"><label for="regPasswordConfirm">Ulangi kata sandi</label>
+          <input type="password" id="regPasswordConfirm" class="form-control" minlength="6" required data-testid="register-password-confirm"></div>
+        <div class="auth-error hidden" id="registerError" data-testid="register-error"></div>
+        <button type="submit" class="btn btn-primary btn-block" data-testid="register-submit">Ajukan Pendaftaran</button>
+        <p class="auth-help"><button type="button" class="link-btn" onclick="toggleAuthMode('login')" data-testid="goto-login">Sudah punya akun? Masuk</button></p>
+      </form>
+    </div>
+  </div>
+
+  <!-- APLIKASI -->
+  <div class="app-layout" id="appLayout" style="display:none">
+    <aside class="sidebar"><nav id="sidebarNav"></nav></aside>
+    <main class="main-view" id="mainView" data-testid="main-view"></main>
+  </div>
+
+  <!-- MODAL KONFIRMASI KIRIM -->
+  <div class="modal" id="confirmModal">
+    <div class="modal-box">
+      <h3>Yakin dengan jawabanmu?</h3>
+      <div id="confirmModalText" data-testid="confirm-text"></div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" onclick="closeModal('confirmModal')" data-testid="confirm-back">Periksa lagi</button>
+        <button class="btn btn-primary" id="confirmSendBtn" onclick="submitTaskFinal()" data-testid="confirm-submit">Ya, saya yakin, kirim</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL PERINGATAN PERTAMA -->
+  <div class="modal" id="warnModal">
+    <div class="modal-box">
+      <h3 class="warn-title"><i class="fa-solid fa-triangle-exclamation"></i> Peringatan 1 dari 2</h3>
+      <p id="warnModalText" data-testid="warn-modal-text">Kamu terdeteksi meninggalkan halaman ujian. Ini peringatan pertama. Jika terjadi lagi, jawaban akan dikirim otomatis.</p>
+      <div class="modal-actions"><button class="btn btn-primary" onclick="closeModal('warnModal')" data-testid="warn-ok">Saya mengerti</button></div>
+    </div>
+  </div>
+
+  <!-- MODAL PELANGGARAN (auto submit) -->
+  <div class="modal" id="cheatModal">
+    <div class="modal-box">
+      <h3 class="danger-title"><i class="fa-solid fa-triangle-exclamation"></i> Ujian dihentikan</h3>
+      <p id="cheatModalText" data-testid="cheat-modal-text"></p>
+      <div class="modal-actions"><button class="btn btn-primary" onclick="closeCheat()" data-testid="cheat-ok">Mengerti</button></div>
+    </div>
+  </div>
+
+  <!-- MODAL FORM GENERIK (guru/admin) -->
+  <div class="modal" id="formModal">
+    <div class="modal-box wide">
+      <h3 id="formTitle"></h3>
+      <div id="formBody"></div>
+      <div class="form-error hidden" id="formError" data-testid="form-error"></div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" onclick="closeForm()" data-testid="form-close">Tutup</button>
+        <button class="btn btn-primary" id="formSaveBtn" onclick="saveForm()" data-testid="form-save">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
